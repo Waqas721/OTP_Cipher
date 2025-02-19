@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One-Time Pad Encryption</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #eef1f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 420px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            width: 50%;
+            background-color: #ccc;
+            color: #333;
+            border: none;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #000; /* Black border */
+            border-radius: 8px;
+            background: white;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: none;
+            margin-bottom: 10px; /* Added spacing */
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .button-group button {
+            width: 48%;
+            padding: 10px;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .button-group button.encrypt {
+            background-color: #28a745;
+        }
+
+        .button-group button.encrypt:hover {
+            background-color: #218838;
+        }
+
+        .button-group button.decrypt {
+            background-color: #dc3545;
+        }
+
+        .button-group button.decrypt:hover {
+            background-color: #c82333;
+        }
+
+        .result-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .result-group label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .result-group span {
+            display: block;
+            margin-top: 6px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        footer {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>One-Time Pad Encryption</h1>
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab('modular')">Modular Addition</button>
+            <button class="tab-button" onclick="openTab('xor')">XOR Encryption</button>
+        </div>
+
+        <div id="modular" class="tab-content active">
+            <h2>Modular Addition</h2>
+            <div class="input-group">
+                <label>Enter Text:</label>
+                <textarea id="modularText" rows="2" placeholder="Enter text to encrypt/decrypt..."></textarea>
+            </div>
+            <div class="input-group">
+                <label>Generated Key (OTP Key):</label>
+                <textarea id="modularKey" rows="2" placeholder="Leave blank to auto-generate a key..."></textarea>
+            </div>
+            <div class="button-group">
+                <button class="encrypt" onclick="modularEncrypt()">Encrypt</button>
+                <button class="decrypt" onclick="modularDecrypt()">Decrypt</button>
+            </div>
+            <div class="result-group">
+                <label>Result:</label>
+                <span id="modularResult">Result will appear here...</span>
+            </div>
+        </div>
+
+        <div id="xor" class="tab-content">
+            <h2>XOR Encryption</h2>
+            <div class="input-group">
+                <label>Enter Text:</label>
+                <textarea id="xorText" rows="2" placeholder="Enter text to encrypt/decrypt..."></textarea>
+            </div>
+            <div class="input-group">
+                <label>Generated Key (OTP Key):</label>
+                <textarea id="xorKey" rows="2" placeholder="Leave blank to auto-generate a key..."></textarea>
+            </div>
+            <div class="button-group">
+                <button class="encrypt" onclick="xorEncrypt()">Encrypt</button>
+                <button class="decrypt" onclick="xorDecrypt()">Decrypt</button>
+            </div>
+            <div class="result-group">
+                <label>Result:</label>
+                <span id="xorResult">Result will appear here...</span>
+            </div>
+            <div class="result-group">
+                <label>Binary Result:</label>
+                <span id="xorBinaryResult">Binary result will appear here...</span>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 Muhammad Waqas Ansari (B21110006095)</p>
+        </footer>
+    </div>
+
+    <script>
+        function openTab(tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            const tabButtons = document.querySelectorAll('.tab-button');
+
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            tabButtons.forEach(button => button.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`button[onclick="openTab('${tabName}')"]`).classList.add('active');
+        }
+
+        // Track whether the key has been used for encryption
+        let isKeyUsed = false;
+
+        // Modular Addition Encryption
+        function modularEncrypt() {
+            const text = document.getElementById('modularText').value;
+            let keyField = document.getElementById('modularKey');
+            let key = keyField.value;
+
+            // If the key field is blank, generate a new key
+            if (!key || key.trim() === '') {
+                key = generateKey(text.length, 'char');
+                keyField.value = key;
+                isKeyUsed = false; // Reset the flag
+            } else if (!isKeyUsed) {
+                // If the key is provided and not used yet, keep it as is
+                isKeyUsed = true;
+            } else {
+                // If the key is provided and already used, generate a new key
+                key = generateKey(text.length, 'char');
+                keyField.value = key;
+            }
+
+            let result = '';
+
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                let keyChar = key[i];
+
+                if (char.match(/[a-zA-Z]/)) {
+                    const isUpperCase = char === char.toUpperCase();
+                    const p = char.toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0);
+                    const k = keyChar.toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0);
+                    const c = (p + k) % 26;
+                    let encryptedChar = String.fromCharCode(c + 'a'.charCodeAt(0));
+                    result += isUpperCase ? encryptedChar.toUpperCase() : encryptedChar;
+                } else {
+                    result += char;
+                }
+            }
+
+            document.getElementById('modularResult').textContent = result;
+        }
+
+        // Modular Addition Decryption
+        function modularDecrypt() {
+            const text = document.getElementById('modularText').value;
+            const key = document.getElementById('modularKey').value;
+            let result = '';
+
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                let keyChar = key[i];
+
+                if (char.match(/[a-zA-Z]/)) {
+                    const isUpperCase = char === char.toUpperCase();
+                    const c = char.toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0);
+                    const k = keyChar.toLowerCase().charCodeAt(0) - 'a'.charCodeAt(0);
+                    let p = (c - k + 26) % 26;
+                    let decryptedChar = String.fromCharCode(p + 'a'.charCodeAt(0));
+                    result += isUpperCase ? decryptedChar.toUpperCase() : decryptedChar;
+                } else {
+                    result += char;
+                }
+            }
+
+            document.getElementById('modularResult').textContent = result;
+        }
+
+        // XOR Encryption
+        function xorEncrypt() {
+            const text = document.getElementById('xorText').value;
+            let isBinaryInput = /^[01 ]+$/.test(text); // Check if input is binary
+            let keyField = document.getElementById('xorKey');
+            let key = keyField.value;
+
+            // If the key field is blank, generate a new key
+            if (!key || key.trim() === '') {
+                key = generateKey(isBinaryInput ? text.replace(/\s+/g, '').length : text.length, isBinaryInput ? 'binary' : 'char');
+                keyField.value = key;
+                isKeyUsed = false; // Reset the flag
+            } else if (!isKeyUsed) {
+                // If the key is provided and not used yet, keep it as is
+                isKeyUsed = true;
+            } else {
+                // If the key is provided and already used, generate a new key
+                key = generateKey(isBinaryInput ? text.replace(/\s+/g, '').length : text.length, isBinaryInput ? 'binary' : 'char');
+                keyField.value = key;
+            }
+
+            let binaryResult = '';
+            let encryptedText = '';
+
+            if (isBinaryInput) {
+                // XOR for binary input
+                let binaryText = text.replace(/\s+/g, ''); // Remove spaces
+                let binaryKey = key.replace(/\s+/g, '');
+                let encryptedBinary = '';
+
+                for (let i = 0; i < binaryText.length; i++) {
+                    encryptedBinary += (binaryText[i] ^ binaryKey[i]).toString();
+                }
+
+                binaryResult = encryptedBinary.match(/.{8}/g)?.join(' ') || encryptedBinary;
+                encryptedText = binaryResult;
+            } else {
+                // XOR for character input
+                for (let i = 0; i < text.length; i++) {
+                    const textChar = text.charCodeAt(i);
+                    const keyChar = key.charCodeAt(i % key.length);
+                    const xorResult = textChar ^ keyChar;
+                    binaryResult += xorResult.toString(2).padStart(8, '0') + ' ';
+                    encryptedText += String.fromCharCode(xorResult);
+                }
+            }
+
+            document.getElementById('xorResult').textContent = encryptedText;
+            document.getElementById('xorBinaryResult').textContent = binaryResult;
+        }
+
+        // XOR Decryption
+        function xorDecrypt() {
+            const text = document.getElementById('xorText').value;
+            const key = document.getElementById('xorKey').value;
+            let isBinaryInput = /^[01 ]+$/.test(text);
+            let binaryResult = '';
+            let decryptedText = '';
+
+            if (isBinaryInput) {
+                // XOR for binary input
+                let binaryText = text.replace(/\s+/g, ''); // Remove spaces
+                let binaryKey = key.replace(/\s+/g, '');
+                let decryptedBinary = '';
+
+                for (let i = 0; i < binaryText.length; i++) {
+                    decryptedBinary += (binaryText[i] ^ binaryKey[i]).toString();
+                }
+
+                binaryResult = decryptedBinary.match(/.{8}/g)?.join(' ') || decryptedBinary;
+                decryptedText = binaryResult;
+            } else {
+                // XOR for character input
+                for (let i = 0; i < text.length; i++) {
+                    const textChar = text.charCodeAt(i);
+                    const keyChar = key.charCodeAt(i % key.length);
+                    const xorResult = textChar ^ keyChar;
+                    binaryResult += xorResult.toString(2).padStart(8, '0') + ' ';
+                    decryptedText += String.fromCharCode(xorResult);
+                }
+            }
+
+            document.getElementById('xorResult').textContent = decryptedText;
+            document.getElementById('xorBinaryResult').textContent = binaryResult;
+        }
+
+        // Generate Key
+        function generateKey(length, type) {
+            let key = '';
+            if (type === 'char') {
+                for (let i = 0; i < length; i++) {
+                    key += String.fromCharCode(Math.floor(Math.random() * 26) + 'A'.charCodeAt(0));
+                }
+            } else if (type === 'binary') {
+                for (let i = 0; i < length; i++) {
+                    key += Math.floor(Math.random() * 2).toString();
+                }
+                key = key.match(/.{8}/g)?.join(' ') || key; // Format binary key in 8-bit groups
+            }
+            return key;
+        }
+
+        // Reset the encrypt count when the key is manually inputted
+        document.getElementById('modularKey').addEventListener('input', () => {
+            isKeyUsed = false;
+        });
+
+        document.getElementById('xorKey').addEventListener('input', () => {
+            isKeyUsed = false;
+        });
+    </script>
+</body>
+</html>
